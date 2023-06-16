@@ -20,7 +20,7 @@ public class LoginActivity extends AppCompatActivity {
 
 
 
-    @Override
+    @Override //creates the login activity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
@@ -31,6 +31,7 @@ public class LoginActivity extends AppCompatActivity {
 
         boolean userExists = mInventoryDb.checkUser();
 
+        //checks if the user exists and if not opens the new user activity page
         if (!userExists) {
             Intent intent = new Intent(LoginActivity.this, NewUserActivity.class);
             startActivity(intent);
@@ -56,8 +57,11 @@ public class LoginActivity extends AppCompatActivity {
 
         //listens for user to press enter key and validates user input to login
         password.setOnKeyListener(new View.OnKeyListener() {
-            @Override
+
+            @Override // when the user presses the enter key, the validate function is called
             public boolean onKey(View v, int keyCode, KeyEvent event) {
+
+                //checks if the enter key is pressed and if so calls the validate function
                 if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
                     validate(user_login.getText().toString(), password.getText().toString());
                     return true;
@@ -73,8 +77,6 @@ public class LoginActivity extends AppCompatActivity {
                 validate(user_login.getText().toString(), password.getText().toString());
             }
         });
-
-
 
     }
 

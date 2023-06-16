@@ -17,6 +17,7 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.util.List;
 
+// Activity to display items in a category
 public class ItemActivity extends AppCompatActivity {
 
     public static final String EXTRA_CATEGORY = "com.zybooks.johnaustininventoryapp.category";
@@ -38,8 +39,9 @@ public class ItemActivity extends AppCompatActivity {
 
     private Item mDeletedItem;
 
-    @Override
+    @Override //creates the item activity
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_item);
 
@@ -79,10 +81,10 @@ public class ItemActivity extends AppCompatActivity {
         }
     }
 
-    @Override
+    @Override //function for when the user returns to the item activity
     public boolean onCreateOptionsMenu(Menu menu) {
 
-        // Inflate menu for the app bar
+        // Inflate the menu; this adds items to the action bar if it is present.
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.item_menu, menu);
         return true;
@@ -95,22 +97,22 @@ public class ItemActivity extends AppCompatActivity {
         // Determine which app bar item was chosen
         switch (item.getItemId()) {
             //allows user to cycle through items in the category
-            case R.id.previous:
+            case R.id.previous: // Display previous item
                 showItem(mCurrentItemIndex - 1);
                 return true;
-            case R.id.next:
+            case R.id.next: // Display next item
                 showItem(mCurrentItemIndex + 1);
                 return true;
 
             //allows the items to be added, edited, or deleted by the user
             case R.id.add:
-                addItem();
+                addItem(); // Add new item
                 return true;
             case R.id.edit:
-                editItem();
+                editItem(); // Edit current item
                 return true;
             case R.id.delete:
-                deleteItem();
+                deleteItem(); // Delete current item
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -139,6 +141,8 @@ public class ItemActivity extends AppCompatActivity {
     private void updateAppBarTitle() {
 
         ActionBar actionBar = getSupportActionBar();
+
+        // if the action bar is not null, set the title
         if (actionBar != null) {
             String title = getResources().getString(R.string.item_number,
                     mCategory, mCurrentItemIndex + 1, mItemList.size());
@@ -155,6 +159,8 @@ public class ItemActivity extends AppCompatActivity {
 
     //logic for the user to edit an item on the list
     private void editItem() {
+
+        // Make sure there is an item to edit
         if (mCurrentItemIndex >= 0) {
             Intent intent = new Intent(this, ItemEditActivity.class);
             intent.putExtra(EXTRA_CATEGORY, mCategory);
@@ -171,17 +177,19 @@ public class ItemActivity extends AppCompatActivity {
             // Save item in case user undoes delete
             mDeletedItem = mItemList.get(mCurrentItemIndex);
 
+            // Delete item from database and list
             long itemId = mItemList.get(mCurrentItemIndex).getId();
             mInventoryDb.deleteItem(mDeletedItem.getId());
             mItemList.remove(mCurrentItemIndex);
 
+            // Update the screen
             if (mItemList.size() == 0) {
                 // No items left to show
                 mCurrentItemIndex = -1;
                 updateAppBarTitle();
                 displayItem(false);
             }
-            else {
+            else { // Show previous or next item
                 showItem(mCurrentItemIndex);
             }
 
@@ -203,10 +211,11 @@ public class ItemActivity extends AppCompatActivity {
         }
     }
 
-
+    // Show item at given index
     private void showItem(int itemIndex) {
 
-        // Show item at the given index
+        // check if there are items to show in the list and if so show them
+        // if the item index is less than 0, set the item index to the last item in the list
         if (mItemList.size() > 0) {
             if (itemIndex < 0) {
                 itemIndex = mItemList.size() - 1;
@@ -214,9 +223,11 @@ public class ItemActivity extends AppCompatActivity {
                 itemIndex = 0;
             }
 
+            // Show item info
             mCurrentItemIndex = itemIndex;
             updateAppBarTitle();
 
+            // Get item from database
             Item item = mItemList.get(mCurrentItemIndex);
             mItemText.setText(item.getName());
             mQuantityText.setText(item.getQuantity());
@@ -229,10 +240,11 @@ public class ItemActivity extends AppCompatActivity {
         }
     }
 
-    @Override
+    @Override //function for when the user returns to the item activity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        // Check if item was added or updated
         if (resultCode == RESULT_OK && requestCode == REQUEST_CODE_NEW_ITEM) {
             // Get added item
             long itemId = data.getLongExtra(ItemEditActivity.EXTRA_ITEM_ID, -1);
@@ -242,6 +254,7 @@ public class ItemActivity extends AppCompatActivity {
             mItemList.add(newItem);
             showItem(mItemList.size() - 1);
 
+            // Show message
             Toast.makeText(this, R.string.item_added, Toast.LENGTH_SHORT).show();
         }
         else if (resultCode == RESULT_OK && requestCode == REQUEST_CODE_UPDATE_ITEM) {
@@ -256,6 +269,7 @@ public class ItemActivity extends AppCompatActivity {
             currentItem.setDescription(updatedItem.getDescription());
             showItem(mCurrentItemIndex);
 
+            // Show message
             Toast.makeText(this, R.string.item_updated, Toast.LENGTH_SHORT).show();
         }
     }

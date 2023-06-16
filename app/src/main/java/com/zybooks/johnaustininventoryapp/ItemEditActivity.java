@@ -20,7 +20,7 @@ public class ItemEditActivity extends AppCompatActivity {
     private long mItemId;
     private Item mItem;
 
-    @Override
+    @Override //creates the item edit activity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_item_edit);
@@ -35,13 +35,13 @@ public class ItemEditActivity extends AppCompatActivity {
         Intent intent = getIntent();
         mItemId = intent.getLongExtra(EXTRA_ITEM_ID, -1);
 
-
+        // If mItemId is -1, then this is a new Item
         if (mItemId == -1) {
             // Add new Item
             mItem = new Item();
             setTitle(R.string.add_item);
         }
-        else {
+        else { // If mItemId is not -1, then this is an existing Item
             // Update existing Item
             mItem = mInventoryDb.getItem(mItemId);
             mItemText.setText(mItem.getName());
@@ -49,21 +49,24 @@ public class ItemEditActivity extends AppCompatActivity {
             mDescriptionText.setText(mItem.getDescription());
             setTitle(R.string.update_item);
         }
-
+        // Get category from ItemActivity
         String category = intent.getStringExtra(EXTRA_CATEGORY);
         mItem.setCategory(category);
     }
 
+    // Save Item button was clicked
     public void saveButtonClick(View view) {
 
+        // Update Item object with user input
         mItem.setName(mItemText.getText().toString());
         mItem.setQuantity(mQuantityText.getText().toString());
         mItem.setDescription(mDescriptionText.getText().toString());
 
+        // Validate user input
         if (mItemText.getText().toString().equals("") || mQuantityText.getText().toString().equals("") || mDescriptionText.getText().toString().equals("")) {
             Toast.makeText(ItemEditActivity.this, "No Field Can Be Left Blank", Toast.LENGTH_LONG).show();
         }
-        else {
+        else { // User input is valid
             if (mItemId == -1) {
                 // New Item
                 mInventoryDb.addItem(mItem);

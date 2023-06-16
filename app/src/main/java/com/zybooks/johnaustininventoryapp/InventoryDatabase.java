@@ -8,9 +8,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
 import java.util.ArrayList;
 import java.util.List;
-import org.mindrot.BCrypt;
+import org.mindrot.BCrypt; //Outside repository added for password encryption
 
-
+//This class is used to create the database and tables for the inventory app
 public class InventoryDatabase extends SQLiteOpenHelper{
 
     private static final int VERSION = 1;
@@ -20,6 +20,7 @@ public class InventoryDatabase extends SQLiteOpenHelper{
 
     public enum CategorySortOrder { ALPHABETIC, UPDATE_DESC, UPDATE_ASC }
 
+    //checks if a database exists if not creates one
     public static InventoryDatabase getInstance(Context context) {
         if (mInventoryDb == null) {
             mInventoryDb = new InventoryDatabase(context);
@@ -27,16 +28,19 @@ public class InventoryDatabase extends SQLiteOpenHelper{
         return mInventoryDb;
     }
 
+    //constructor
     private InventoryDatabase(Context context) {
         super(context, DATABASE_NAME, null, VERSION);
     }
 
+    //category database
     private static final class CategoryTable {
         private static final String TABLE = "categories";
         private static final String COL_NAME = "name";
         private static final String COL_UPDATE_TIME = "updated";
     }
 
+    //item database
     private static final class ItemTable {
         private static final String TABLE = "items";
         private static final String COL_ID = "_id";
@@ -46,6 +50,7 @@ public class InventoryDatabase extends SQLiteOpenHelper{
         private static final String COL_DESCRIPTION = "description";
     }
 
+    //user database
     private static final class UserTable {
         private static final String TABLE = "users";
         private static final String COL_USERNAME = "username";
@@ -70,6 +75,7 @@ public class InventoryDatabase extends SQLiteOpenHelper{
                 "foreign key(" + ItemTable.COL_CATEGORY + ") references " +
                 CategoryTable.TABLE + "(" + CategoryTable.COL_NAME + ") on delete cascade)");
 
+        //creates user table
         db.execSQL("create table " + UserTable.TABLE + " (" +
                 UserTable.COL_USERNAME + " primary key, " +
                 UserTable.COL_PASSWORD + " varchar(255))");
@@ -87,7 +93,7 @@ public class InventoryDatabase extends SQLiteOpenHelper{
         }
     }
 
-    @Override
+    @Override //drops tables if they exist
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("drop table if exists " + CategoryTable.TABLE);
         db.execSQL("drop table if exists " + ItemTable.TABLE);
@@ -108,31 +114,34 @@ public class InventoryDatabase extends SQLiteOpenHelper{
         }
     }
 
+    //adds a new item to the database
     public List<Category> getCategories(CategorySortOrder order) {
         List<Category> categories = new ArrayList<>();
 
         SQLiteDatabase db = this.getReadableDatabase();
-
+        // Order by name or update time
         String orderBy;
         switch (order) {
             case ALPHABETIC:
-                orderBy = CategoryTable.COL_NAME + " collate nocase";
+                orderBy = CategoryTable.COL_NAME + " collate nocase"; // order alphabetically
                 break;
             case UPDATE_DESC:
-                orderBy = CategoryTable.COL_UPDATE_TIME + " desc";
+                orderBy = CategoryTable.COL_UPDATE_TIME + " desc"; // order by most recently updated
                 break;
             case UPDATE_ASC:
-                orderBy = CategoryTable.COL_UPDATE_TIME + " asc";
+                orderBy = CategoryTable.COL_UPDATE_TIME + " asc"; // order by least recently updated
                 break;
             default:
-                orderBy = CategoryTable.COL_UPDATE_TIME;
+                orderBy = CategoryTable.COL_UPDATE_TIME; // order by most recently updated
                 break;
         }
 
+        // Get all categories
         String sql = "select * from " + CategoryTable.TABLE + " order by " + orderBy;
         Cursor cursor = db.rawQuery(sql, null);
         if (cursor.moveToFirst()) {
             do {
+                //add categories to the list
                 Category category = new Category();
                 category.setName(cursor.getString(0));
                 category.setUpdateTime(cursor.getLong(1));
@@ -144,10 +153,13 @@ public class InventoryDatabase extends SQLiteOpenHelper{
         return categories;
     }
 
+    //adds a new user to the database
     public boolean addUser(String username, String password) {
 
+        // Hash the password
         String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
 
+        // Add the user to the database
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(UserTable.COL_USERNAME, username);
@@ -157,7 +169,7 @@ public class InventoryDatabase extends SQLiteOpenHelper{
     }
 
 
-
+    //checks if a user exists
     public boolean checkUser() {
 
         SQLiteDatabase db = getWritableDatabase();
@@ -174,26 +186,32 @@ public class InventoryDatabase extends SQLiteOpenHelper{
 
     }
 
+    // grants user login
     public boolean grantUserLogin(String username, String password) {
         SQLiteDatabase db = getWritableDatabase();
         Cursor cursor = db.rawQuery("SELECT * FROM " + UserTable.TABLE + " WHERE Username = ?", new String[] {username});
 
-
+        // Check if the user exists
         if (cursor.getCount() > 0) {
 
             cursor.moveToFirst();
+
+            // Get the hashed password
             int passwordIndex = cursor.getColumnIndex(UserTable.COL_PASSWORD);
 
+            // Check the password
             if (passwordIndex != -1) {
                 String hashedPassword = cursor.getString(passwordIndex);
                 return BCrypt.checkpw(password, hashedPassword);
             }
         }
         cursor.close();
-        return false;
+        return false; // User does not exist
     }
 
+    //adds a new category to the database
     public boolean addCategory(Category category) {
+
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(CategoryTable.COL_NAME, category.getName());
@@ -202,6 +220,7 @@ public class InventoryDatabase extends SQLiteOpenHelper{
         return id != -1;
     }
 
+    // updates a category in the database
     public void updateCategory(Category category) {
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -211,16 +230,20 @@ public class InventoryDatabase extends SQLiteOpenHelper{
                 CategoryTable.COL_NAME + " = ?", new String[] { category.getName() });
     }
 
+    // deletes a category from the database
     public void deleteCategory(Category category) {
         SQLiteDatabase db = getWritableDatabase();
         db.delete(CategoryTable.TABLE,
                 CategoryTable.COL_NAME + " = ?", new String[] { category.getName() });
     }
 
+    // returns a list of items in the database
     public List<Item> getItems(String category) {
         List<Item> items = new ArrayList<>();
 
         SQLiteDatabase db = this.getReadableDatabase();
+
+        // Get all items in the category database
         String sql = "select * from " + ItemTable.TABLE +
                 " where " + ItemTable.COL_CATEGORY + " = ?";
         Cursor cursor = db.rawQuery(sql, new String[] { category });
@@ -233,6 +256,7 @@ public class InventoryDatabase extends SQLiteOpenHelper{
                 item.setDescription(cursor.getString(3));
                 item.setCategory(cursor.getString(4));
 
+                //add items to the list
                 items.add(item);
             } while (cursor.moveToNext());
         }
@@ -241,6 +265,7 @@ public class InventoryDatabase extends SQLiteOpenHelper{
         return items;
     }
 
+    // returns a single item from the database
     public Item getItem(long itemId) {
         Item item = null;
 
@@ -249,6 +274,7 @@ public class InventoryDatabase extends SQLiteOpenHelper{
                 " where " + ItemTable.COL_ID + " = ?";
         Cursor cursor = db.rawQuery(sql, new String[] { Float.toString(itemId) });
 
+        // Get the item
         if (cursor.moveToFirst()) {
             item = new Item();
             item.setId(cursor.getInt(0));
@@ -261,6 +287,7 @@ public class InventoryDatabase extends SQLiteOpenHelper{
         return item;
     }
 
+    // adds an item to the database
     public void addItem(Item item) {
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -275,9 +302,12 @@ public class InventoryDatabase extends SQLiteOpenHelper{
         updateCategory(new Category(item.getCategory()));
     }
 
+    // updates an item in the database
     public void updateItem(Item item) {
         SQLiteDatabase db = getWritableDatabase();
+
         ContentValues values = new ContentValues();
+
         values.put(ItemTable.COL_ID, item.getId());
         values.put(ItemTable.COL_NAME, item.getName());
         values.put(ItemTable.COL_QUANTITY, item.getQuantity());
@@ -290,6 +320,7 @@ public class InventoryDatabase extends SQLiteOpenHelper{
         updateCategory(new Category(item.getCategory()));
     }
 
+    // deletes an item from the database
     public void deleteItem(long itemId) {
         SQLiteDatabase db = getWritableDatabase();
         db.delete(ItemTable.TABLE,

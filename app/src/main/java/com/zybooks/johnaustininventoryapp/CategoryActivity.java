@@ -22,6 +22,8 @@ import java.util.List;
 import android.view.ActionMode;
 import android.graphics.Color;
 
+
+// CategoryActivity displays the list of categories
 public class CategoryActivity extends AppCompatActivity
         implements CategoryDialogFragment.OnCategoryEnteredListener {
 
@@ -42,6 +44,7 @@ public class CategoryActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_category);
 
+        // Create array of colors for categories
         mCategoryColors = getResources().getIntArray(R.array.categoryColors);
 
         // create category database instance
@@ -72,7 +75,7 @@ public class CategoryActivity extends AppCompatActivity
 
     }
 
-    @Override
+    @Override //creates the menu for the app bar
     public boolean onCreateOptionsMenu(Menu menu) {
 
         // Inflate menu for the app bar
@@ -81,27 +84,27 @@ public class CategoryActivity extends AppCompatActivity
         return true;
     }
 
-    @Override
+    @Override //handles the menu items in the app bar
     public boolean onOptionsItemSelected(MenuItem item) {
 
         // Determine which app bar item was chosen
         switch (item.getItemId()) {
 
             //allows the categories to be sorted by the user either alphabetically or based on the time created
-            case R.id.alphabetical:
+            case R.id.alphabetical: //sorts categories alphabetically
                 mCategoryAdapter = new CategoryAdapter(loadAlphabeticalCategories());
                 mRecyclerView.setAdapter(mCategoryAdapter);
                 return true;
-            case R.id.ascending:
+            case R.id.ascending: //sorts categories by time created by oldest
                 mCategoryAdapter = new CategoryAdapter(loadAscendingCategories());
                 mRecyclerView.setAdapter(mCategoryAdapter);
                 return true;
-            case R.id.descending:
+            case R.id.descending: //sorts categories by time created by most recent
                 mCategoryAdapter = new CategoryAdapter(loadDescendingCategories());
                 mRecyclerView.setAdapter(mCategoryAdapter);
                 return true;
             default:
-                return super.onOptionsItemSelected(item);
+                return super.onOptionsItemSelected(item); //allows for default menu items to be used
         }
     }
 
@@ -126,6 +129,8 @@ public class CategoryActivity extends AppCompatActivity
                                            String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
+
+            //checks if user approved sms permissions
             case REQUEST_SMS_CODE: {
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -140,7 +145,7 @@ public class CategoryActivity extends AppCompatActivity
         }
     }
 
-    @Override
+    @Override //creates the action bar for the app
     public void onCategoryEntered(String category) {
 
         // Returns category entered in the CategoryDialogFragment dialog
@@ -158,6 +163,7 @@ public class CategoryActivity extends AppCompatActivity
         }
     }
 
+    //handles the logic for when a category is clicked
     public void addCategoryClick(View view) {
 
         // Prompt user to type new Category in pop up window
@@ -171,7 +177,6 @@ public class CategoryActivity extends AppCompatActivity
         return mInventoryDb.getCategories(InventoryDatabase.CategorySortOrder.UPDATE_DESC);
     }
 
-
     //handles logic for categories including colors and actions
     //taken when clicked or clicked and held
     private class CategoryHolder extends RecyclerView.ViewHolder
@@ -180,6 +185,7 @@ public class CategoryActivity extends AppCompatActivity
         private Category mCategory;
         private TextView mTextView;
 
+        //constructor for category holder
         public CategoryHolder(LayoutInflater inflater, ViewGroup parent) {
             super(inflater.inflate(R.layout.recycler_view_items, parent, false));
             itemView.setOnClickListener(this);
@@ -187,6 +193,7 @@ public class CategoryActivity extends AppCompatActivity
             itemView.setOnLongClickListener(this);
         }
 
+        //binds the category to the view
         public void bind(Category category, int position) {
             mCategory = category;
             mTextView.setText(category.getName());
@@ -237,22 +244,23 @@ public class CategoryActivity extends AppCompatActivity
 
         private List<Category> mCategoryList;
 
+        //constructor for category adapter
         public CategoryAdapter(List<Category> categories) {
             mCategoryList = categories;
         }
 
-        @Override
+        @Override //creates the view holder for the category
         public CategoryHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             LayoutInflater layoutInflater = LayoutInflater.from(getApplicationContext());
             return new CategoryHolder(layoutInflater, parent);
         }
 
-        @Override
+        @Override //binds the category to the view holder
         public void onBindViewHolder(CategoryHolder holder, int position){
             holder.bind(mCategoryList.get(position), position);
         }
 
-        @Override
+        @Override //returns the number of categories
         public int getItemCount() {
             return mCategoryList.size();
         }
@@ -285,7 +293,7 @@ public class CategoryActivity extends AppCompatActivity
     //for the CAB-related actions.
     private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
 
-        @Override
+        @Override //creates the CAB
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
             // Provide context menu for CAB
             MenuInflater inflater = mode.getMenuInflater();
@@ -293,12 +301,12 @@ public class CategoryActivity extends AppCompatActivity
             return true;
         }
 
-        @Override
+        @Override //prepares the CAB
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
             return false;
         }
 
-        @Override
+        @Override //handles the actions within the CAB
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             // Process action item selection
             switch (item.getItemId()) {
@@ -315,7 +323,7 @@ public class CategoryActivity extends AppCompatActivity
             }
         }
 
-        @Override
+        @Override //destroys the CAB
         public void onDestroyActionMode(ActionMode mode) {
             mActionMode = null;
 
